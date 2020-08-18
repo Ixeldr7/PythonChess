@@ -6,5 +6,12 @@ class Square:
 		self.name = name
 		self.number = ""
 		self.occupant = None
+
+	def isOccupied(self):
+		if self.occupant:
+			return True
+
+	def getOccupant(self):
+		return self.occupant
 		
 

@@ -2,10 +2,9 @@ from square import Square
 from piece import Piece
 import itertools
 import pygame as pg
+from move import Move
 
-WHITE = "WHITE"
-BLACK = "BLACK"
-SQUARES = 64
+from constants import WHITE, BLACK, SQUARES
 
 class Board:
 
@@ -63,10 +62,6 @@ class Board:
 					piece.square = square
 					square.occupant = piece
 
-		#print(pieces[1].square)
-		#print(pieces[1].square.name)
-		#print(pieces[1].squareName)
-
 		return pieces
 
 	def setup_pieces(self):
@@ -76,6 +71,74 @@ class Board:
 	def defaultBoardState(self):
 		
 		return 0
+	
+	def getPiece(self, currentSquare):
+		for square in self.squares:
+			if square.name == currentSquare:
+				piece = self.getOccupant(square)
+				if piece:
+					break
+
+		return piece
+
+	def getOccupant(self, square):
+		for piece in self.pieces:
+			if square.occupant == piece:
+				return piece
+
+	def getPieceToCapture(self, moveTo):
+		for square in self.squares:
+				if square.name != moveTo:
+					continue
+
+				if square.isOccupied():
+					pieceToCapture = square.getOccupant()
+				else:
+					pieceToCapture = None
+
+		return pieceToCapture
+
+	def removeCapturedPiece(self, capturedPiece):
+			self.pieces.remove(capturedPiece)
+
+	def makeMove(self, move):
+		
+		pieceToMove = self.getPiece(move.moveFrom)
+		
+		# TODO jj - needs something to check move is valid for the type of piece
+		validMove = True
+
+		if pieceToMove:
+
+			# Is the square we are moving to occupied?
+			pieceToCapture = self.getPieceToCapture(move.moveTo)
+			
+			if pieceToCapture:
+				# If the pieces are of opposing colours the piece is captured
+				if pieceToCapture.colour != pieceToMove.colour:
+					pieceToCapture.captured = True
+				# If the pieces are of the same colour the move is invalid
+				if pieceToCapture.colour == pieceToMove.colour:
+					validMove = False
+
+			if validMove:
+				
+				# Clear the old square
+				for square in self.squares:
+					if square.occupant == pieceToMove:
+						square.occupant = None
+
+				pieceToMove.squareName = move.moveTo
+
+				if pieceToCapture:
+					self.removeCapturedPiece(pieceToCapture)
+
+				# Update piece and square lists
+				for square in self.squares:
+					for piece in self.pieces:
+						if square.name == piece.squareName:
+							piece.square = square
+							square.occupant = piece
 
 def loadImages(pieces):
 	for piece in pieces:

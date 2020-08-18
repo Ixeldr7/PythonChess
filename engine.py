@@ -1,13 +1,9 @@
-
+from constants import WIDTH, HEIGHT, DIMENSION, TILE_SIZE, MAX_FPS
 from board import Board
 import itertools
 import pygame as pg
-
-WIDTH = 512
-HEIGHT = 512
-DIMENSION = 8
-TILE_SIZE = HEIGHT / DIMENSION
-MAX_FPS = 15
+from input_handlers import handle_events
+from move import Move
 
 def main():
 	xAxis = ['A','B','C','D','E','F','G','H']
@@ -22,20 +18,40 @@ def main():
 	screen.fill(WHITE)
 	clock = pg.time.Clock()
 	board = Board(xAxis, yAxis)
-	
+
+	move = Move()
+
 	running = True
 	while running:
 		for event in pg.event.get():
-			if event.type == pg.QUIT:
+			action = handle_events(event)
+			
+			if action:
+				quit = action.get('quit')
+				left_click = action.get('left_click')
+			else:
+				quit = None
+				left_click = None
+
+			if quit:
 				running = False
 
-		renderGameState(screen, board, colours, xAxis, yAxis)
+			if left_click:
+				x,y = left_click
+				selectedSquare = str(board.xAxis[x]) + str(board.yAxis[y])
+				move.addMove(selectedSquare)
+				
+				if move.makeMove:
+					board.makeMove(move)
+					move.clear()
+
+		renderGameState(screen, board, colours)
 		clock.tick(MAX_FPS)
 		pg.display.flip()
 
-def renderGameState(screen, board, colours, xAxis, yAxis):
+def renderGameState(screen, board, colours):
 	renderBoard(screen, board, colours)
-	renderPieces(screen, board, xAxis, yAxis)
+	renderPieces(screen, board)
 
 def renderBoard(screen, board, colours):
 
@@ -47,29 +63,13 @@ def renderBoard(screen, board, colours):
 
 	return 0
 
-def getPiece(board, currentSquare):
-	for square in board.squares:
-		if square.name == currentSquare:
-			piece = isOccupied(board, square)
-			if piece:
-				print(piece.name)
-				print(str(piece.image))
-				break
-
-	return piece
-
-def isOccupied(board, square):
-	for piece in board.pieces:
-		if square.occupant == piece:
-			return piece
-
-def renderPieces(screen, board, xAxis, yAxis):
+def renderPieces(screen, board):
 
 	for y in range(DIMENSION):
 		for x in range(DIMENSION):
-			currentSquare = str(xAxis[x]) + str(yAxis[y])
-			piece = getPiece(board, currentSquare)
-			if piece:
+			currentSquare = str(board.xAxis[x]) + str(board.yAxis[y])
+			piece = board.getPiece(currentSquare)
+			if piece and piece.captured == False:
 				screen.blit(piece.image, pg.Rect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
 	return

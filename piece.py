@@ -9,3 +9,4 @@ class Piece:
 		self.image = ""
 		self.squareName = squareName
 		self.square = ""
+		self.captured = False
